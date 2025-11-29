@@ -1,0 +1,12 @@
+id,name,age,city,zip_code,income,disease
+1,Alice,34,New York,10001,85000,Flu
+2,Bob,28,Boston,02108,62000,Cold
+3,Charlie,52,Chicago,60601,91000,Diabetes
+4,Dana,45,San Francisco,94102,130000,Flu
+5,Evan,38,Seattle,98101,78000,Cold
+6,Fiona,60,Denver,80202,67000,Asthma
+7,George,30,Austin,73301,72000,Flu
+8,Hannah,27,Miami,33101,54000,Cold
+9,Ian,55,Portland,97201,88000,Diabetes
+10,Jade,48,Atlanta,30301,99000,Flu
+

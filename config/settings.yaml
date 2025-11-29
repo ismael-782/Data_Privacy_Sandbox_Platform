@@ -1,0 +1,20 @@
+app:
+  name: Privacy Sandbox
+  debug: true
+  max_file_size_mb: 20
+  supported_extensions:
+    - .csv
+    - .tsv
+    - .xlsx
+
+data:
+  min_rows: 5
+  upload_dir: data/uploads
+  examples_dir: data/examples
+
+privacy:
+  default_k: 5
+  default_l: 2
+  default_t: 0.2
+  default_epsilon: 1.0
+

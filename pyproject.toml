@@ -1,0 +1,20 @@
+[project]
+name = "privacy-sandbox"
+version = "0.1.0"
+description = "Local privacy experimentation environment"
+requires-python = ">=3.11"
+authors = [{ name = "Privacy Sandbox Dev Team" }]
+dependencies = []
+
+[tool.black]
+line-length = 100
+
+[tool.isort]
+profile = "black"
+line_length = 100
+
+[tool.pytest.ini_options]
+minversion = "7.4"
+addopts = "-ra -q"
+testpaths = ["tests"]
+
