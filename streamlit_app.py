@@ -91,53 +91,96 @@ def main() -> None:
             st.write(f"- {warn}")
 
     st.subheader("Algorithms")
-    selected_algorithms = st.multiselect(
-        "Select privacy methods",
-        anonymization_service.available_algorithms(),
-        default=["k-anonymity"],
-    )
-
-    col_a, col_b, col_c, col_d = st.columns(4)
-    with col_a:
-        k_value = st.number_input("k (k-anonymity)", min_value=2, value=settings.privacy.default_k)
-    with col_b:
-        l_value = st.number_input("l (l-diversity)", min_value=2, value=settings.privacy.default_l)
-    with col_c:
-        t_value = st.number_input(
-            "t (t-closeness)", min_value=0.0, max_value=1.0, value=settings.privacy.default_t, step=0.05
-        )
-    with col_d:
-        epsilon_value = st.number_input(
-            "ε (differential privacy)", min_value=0.01, value=settings.privacy.default_epsilon, step=0.1
-        )
-
-    if st.button("Run anonymization", type="primary", disabled=not selected_algorithms):
+    
+    from app.ui.components.algorithm_tabs import render_algorithm_tabs
+    
+    tab_params = render_algorithm_tabs(uploaded_df)
+    
+    if tab_params.run_clicked:
         params = AlgorithmParams(
             quasi_identifiers=qi_cols,
             sensitive_attributes=sa_cols,
-            k=int(k_value),
-            l=int(l_value),
-            t=float(t_value),
-            epsilon=float(epsilon_value),
+            identifiers=id_cols,
+            k=tab_params.k,
+            l=tab_params.l,
+            t=tab_params.t,
+            epsilon=tab_params.epsilon,
+            query_type=tab_params.query_type,
+            target_column=tab_params.target_column,
         )
         try:
-            with st.spinner("Running algorithms..."):
+            with st.spinner("Running algorithm..."):
                 result = anonymization_service.run_pipeline(
-                    uploaded_df, selected_algorithms, params
+                    uploaded_df, [tab_params.algorithm], params
                 )
+                # Store result in session state so it persists
+                st.session_state["anonymization_result"] = result
         except ValueError as exc:
             st.error(f"Anonymization failed: {exc}")
+            st.session_state.pop("anonymization_result", None)
             st.stop()
 
-        st.success(f"Anonymization finished. Rows: {result.anonymized_rows}/{result.original_rows}")
-        st.metric("Suppression ratio", f"{result.metrics['suppression_ratio']:.2%}")
-        st.dataframe(result.dataframe.head(100), use_container_width=True)
-        st.download_button(
-            "Download anonymized CSV",
-            data=result.dataframe.to_csv(index=False).encode("utf-8"),
-            file_name="anonymized.csv",
-            mime="text/csv",
-        )
+    # Display result if available (persists across reruns)
+    if "anonymization_result" in st.session_state:
+        result = st.session_state["anonymization_result"]
+        
+        # Check if this is a DP query result
+        is_dp_query = result.metrics.get("is_dp_query", 0) == 1.0
+        
+        if is_dp_query:
+            # Display DP query result as metrics
+            st.subheader("Query Results")
+            
+            # Extract values from the result dataframe
+            row = result.dataframe.iloc[0]
+            true_value = row["True Value"]
+            dp_value = row["DP Value (with noise)"]
+            noise = row["Noise Added"]
+            epsilon = row["Epsilon (ε)"]
+            
+            # Display as two metrics side by side
+            col1, col2 = st.columns(2)
+            with col1:
+                st.metric("True Value", f"{true_value:.4f}")
+            with col2:
+                st.metric("DP Value", f"{dp_value:.4f}", delta=f"Noise: {noise:.4f}")
+            
+            st.caption(f"Applied Laplace mechanism with ε={epsilon}")
+        else:
+            # Display anonymization result
+            st.success(f"Anonymization finished. Rows: {result.anonymized_rows}/{result.original_rows}")
+            
+            # Display metrics in columns
+            metric_cols = st.columns(3)
+            with metric_cols[0]:
+                if "avg_equivalence_class_size" in result.metrics:
+                    st.metric(
+                        "Avg. Equivalence Class Size", 
+                        f"{result.metrics['avg_equivalence_class_size']:.2f}",
+                        help="Closer to 1.0 = better (minimal over-generalization)."
+                    )
+            with metric_cols[1]:
+                if "global_certainty_penalty" in result.metrics:
+                    st.metric(
+                        "Information Loss", 
+                        f"{result.metrics['global_certainty_penalty']:.2%}",
+                        help="0% = no info loss, 100% = total info loss."
+                    )
+            with metric_cols[2]:
+                if "discernibility_metric" in result.metrics:
+                    st.metric(
+                        "Discernibility", 
+                        f"{result.metrics['discernibility_metric']:,.0f}",
+                        help="Quality loss metric. Lower = better utility."
+                    )
+            
+            st.dataframe(result.dataframe.head(100), use_container_width=True)
+            st.download_button(
+                "Download anonymized CSV",
+                data=result.dataframe.to_csv(index=False).encode("utf-8"),
+                file_name="anonymized.csv",
+                mime="text/csv",
+            )
 
 
 if __name__ == "__main__":

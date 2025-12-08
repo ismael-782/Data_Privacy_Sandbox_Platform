@@ -12,10 +12,13 @@ import pandas as pd
 class AlgorithmParams:
     quasi_identifiers: list[str]
     sensitive_attributes: list[str]
+    identifiers: list[str] | None = None  # Columns to drop during anonymization
     k: int | None = None
     l: int | None = None
     t: float | None = None
     epsilon: float | None = None
+    query_type: str | None = None  # "Mean" or "Sum" for DP
+    target_column: str | None = None  # Column for DP query
 
 
 class PrivacyAlgorithm(Protocol):
