@@ -1,6 +1,6 @@
 # Privacy Sandbox
 
-A local-first playground for experimenting with data anonymization techniques including **K-Anonymity**, **L-Diversity**, **T-Closeness**, and **Differential Privacy**.
+A local-first playground for experimenting with data anonymization techniques including **K-Anonymity**, **L-Diversity**, **T-Closeness**, **Differential Privacy**, and **Auto-Suggest**.
 
 ## Features
 
@@ -8,6 +8,7 @@ A local-first playground for experimenting with data anonymization techniques in
 - **K-Anonymity**: Ensures each record is indistinguishable from at least k-1 others based on quasi-identifiers
 - **L-Diversity**: Extends k-anonymity by requiring diversity in sensitive attribute values
 - **T-Closeness**: Limits the distance between class and global distributions of sensitive attributes
+- **Auto-Suggest**: Automatically analyzes your data and selects the best anonymization technique for maximum utility
 - **Differential Privacy**: Adds calibrated noise to aggregate queries (Mean/Sum) with mathematical privacy guarantees
 
 ### Application Features
@@ -39,7 +40,7 @@ A local-first playground for experimenting with data anonymization techniques in
 
 | Library | Purpose |
 |---------|---------|
-| `anonymity-api` | K-Anonymity, L-Diversity, T-Closeness algorithms and utility metrics |
+| `anonymity-api` | K-Anonymity, L-Diversity, T-Closeness, Auto-Suggest algorithms and utility metrics |
 | `diffprivlib` | Differential Privacy mechanisms (IBM) |
 | `streamlit` | Web UI framework |
 | `pandas` | Data manipulation |
@@ -50,7 +51,7 @@ A local-first playground for experimenting with data anonymization techniques in
 ├── app/
 │   ├── core/           # Configuration and logging
 │   ├── privacy/
-│   │   ├── algorithms/ # K-Anonymity, L-Diversity, T-Closeness, DP implementations
+│   │   ├── algorithms/ # K-Anonymity, L-Diversity, T-Closeness, DP, Auto-Suggest
 │   │   └── validators/ # Dataset validation logic
 │   ├── services/       # Anonymization service orchestration
 │   └── ui/
@@ -68,7 +69,7 @@ A local-first playground for experimenting with data anonymization techniques in
    - Quasi-identifiers: Columns that could partially identify individuals
    - Sensitive attributes: Private information to protect
    - Identifiers: Direct identifiers to remove (e.g., names, SSN)
-3. **Select an algorithm** and configure parameters
+3. **Select an algorithm** and configure parameters (or use Auto-Suggest)
 4. **Run** and view results with utility metrics
 5. **Download** the anonymized dataset
 

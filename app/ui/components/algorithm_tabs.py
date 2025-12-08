@@ -35,7 +35,7 @@ def render_algorithm_tabs(df: pd.DataFrame) -> TabParams:
         TabParams with the selected algorithm and its parameters, 
         and run_clicked=True if a Run button was clicked.
     """
-    tab_names = ["K-Anonymity", "L-Diversity", "T-Closeness", "Differential Privacy"]
+    tab_names = ["K-Anonymity", "L-Diversity", "T-Closeness", "Auto-Suggest", "Differential Privacy"]
     tabs = st.tabs(tab_names)
     
     # Track button clicks and params for each algorithm
@@ -86,8 +86,16 @@ def render_algorithm_tabs(df: pd.DataFrame) -> TabParams:
         if st.button("Run T-Closeness", key="btn_run_t_close", type="primary"):
             clicked = "t-closeness"
     
-    # Differential Privacy Tab
+    # Auto-Suggest Tab
     with tabs[3]:
+        st.markdown("**Auto-Suggest** analyzes your data and automatically applies the best anonymization technique.")
+        st.info("💡 The algorithm evaluates multiple techniques and selects the one with the highest utility.")
+        params_dict["suggestion"] = {}
+        if st.button("Run Auto-Suggest", key="btn_run_suggest", type="primary"):
+            clicked = "suggestion"
+    
+    # Differential Privacy Tab
+    with tabs[4]:
         st.markdown("**Differential Privacy** adds calibrated noise to aggregate queries.")
         
         # Filter to only numeric columns

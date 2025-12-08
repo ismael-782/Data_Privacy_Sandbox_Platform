@@ -13,6 +13,7 @@ from app.privacy.algorithms.differential_privacy import DifferentialPrivacy
 from app.privacy.algorithms.k_anonymity import KAnonymity
 from app.privacy.algorithms.l_diversity import LDiversity
 from app.privacy.algorithms.t_closeness import TCloseness
+from app.privacy.algorithms.suggestion import SuggestionAlgorithm
 
 
 @dataclass
@@ -32,6 +33,7 @@ class AnonymizationService:
             "l-diversity": LDiversity(),
             "t-closeness": TCloseness(),
             "differential-privacy": DifferentialPrivacy(),
+            "suggestion": SuggestionAlgorithm(),
         }
 
     def available_algorithms(self) -> list[str]:
@@ -49,6 +51,7 @@ class AnonymizationService:
         
         # Check if this is a DP query (handled differently)
         is_dp_query = "differential-privacy" in algorithm_keys
+        is_suggestion = "suggestion" in algorithm_keys
         
         for key in algorithm_keys:
             algorithm = self.registry.get(key)
@@ -56,6 +59,12 @@ class AnonymizationService:
                 raise ValueError(f"Unknown algorithm '{key}' selected.")
             anonymized = algorithm.run(anonymized, params)
             metrics[f"{key}_rows"] = len(anonymized)
+            
+            # Capture suggestion algorithm's selected method
+            if key == "suggestion":
+                selected_algo, algo_utility, _ = algorithm.get_selection_info()
+                metrics["suggestion_selected"] = 1.0  # Flag for UI
+                metrics["suggestion_utility"] = algo_utility
 
         # For DP queries, the result is a query result table, not anonymized data
         # So skip the anonymization metrics
@@ -65,6 +74,41 @@ class AnonymizationService:
                 anonymized_rows=len(anonymized),
                 dataframe=anonymized,
                 metrics={"is_dp_query": 1.0},  # Flag for UI
+            )
+        
+        # For suggestion algorithm, calculate metrics and add suggestion flag
+        if is_suggestion:
+            algorithm = self.registry.get("suggestion")
+            selected_algo, algo_utility, algo_params = algorithm.get_selection_info()
+            
+            # Calculate utility metrics for the suggestion result
+            suggestion_metrics: Dict[str, float] = {
+                "is_suggestion": 1.0,
+                "suggestion_utility": algo_utility,
+            }
+            
+            if params.quasi_identifiers:
+                try:
+                    aecs = utility.average_equivalence_class_size(
+                        original_df, anonymized, params.quasi_identifiers
+                    )
+                    suggestion_metrics["avg_equivalence_class_size"] = float(aecs)
+                    
+                    dm = utility.discernibility_metric(anonymized, params.quasi_identifiers)
+                    suggestion_metrics["discernibility_metric"] = float(dm)
+                    
+                    gcp = utility.global_certainty_penalty(
+                        original_df, anonymized, params.quasi_identifiers
+                    )
+                    suggestion_metrics["global_certainty_penalty"] = float(gcp)
+                except Exception:
+                    pass
+            
+            return AnonymizationResult(
+                original_rows=len(original_df),
+                anonymized_rows=len(anonymized),
+                dataframe=anonymized,
+                metrics=suggestion_metrics,
             )
 
         # Calculate utility metrics for anonymization algorithms

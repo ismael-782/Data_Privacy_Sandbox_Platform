@@ -115,6 +115,14 @@ def main() -> None:
                 )
                 # Store result in session state so it persists
                 st.session_state["anonymization_result"] = result
+                
+                # For suggestion algorithm, store selected algorithm name and params
+                if tab_params.algorithm == "suggestion":
+                    algo = anonymization_service.registry.get("suggestion")
+                    selected_name, utility, params_str = algo.get_selection_info()
+                    st.session_state["suggestion_selected_algorithm"] = selected_name
+                    st.session_state["suggestion_utility"] = utility
+                    st.session_state["suggestion_params"] = params_str
         except ValueError as exc:
             st.error(f"Anonymization failed: {exc}")
             st.session_state.pop("anonymization_result", None)
@@ -126,6 +134,7 @@ def main() -> None:
         
         # Check if this is a DP query result
         is_dp_query = result.metrics.get("is_dp_query", 0) == 1.0
+        is_suggestion = result.metrics.get("is_suggestion", 0) == 1.0
         
         if is_dp_query:
             # Display DP query result as metrics
@@ -146,6 +155,46 @@ def main() -> None:
                 st.metric("DP Value", f"{dp_value:.4f}", delta=f"Noise: {noise:.4f}")
             
             st.caption(f"Applied Laplace mechanism with ε={epsilon}")
+        elif is_suggestion:
+            # Display suggestion algorithm result
+            selected_algo = st.session_state.get("suggestion_selected_algorithm", "unknown")
+            algo_params = st.session_state.get("suggestion_params", "")
+            
+            # Build message with algorithm details
+            params_text = f" with **{algo_params}**" if algo_params else ""
+            st.info(f"📊 The algorithm analyzed your data and selected **{selected_algo}**{params_text} as the best technique for maximum utility while preserving privacy.")
+            
+            # Display metrics in columns
+            metric_cols = st.columns(3)
+            with metric_cols[0]:
+                if "avg_equivalence_class_size" in result.metrics:
+                    st.metric(
+                        "Avg. Equivalence Class Size", 
+                        f"{result.metrics['avg_equivalence_class_size']:.2f}",
+                        help="Closer to 1.0 = better (minimal over-generalization)."
+                    )
+            with metric_cols[1]:
+                if "global_certainty_penalty" in result.metrics:
+                    st.metric(
+                        "Information Loss", 
+                        f"{result.metrics['global_certainty_penalty']:.2%}",
+                        help="0% = no info loss, 100% = total info loss."
+                    )
+            with metric_cols[2]:
+                if "discernibility_metric" in result.metrics:
+                    st.metric(
+                        "Discernibility", 
+                        f"{result.metrics['discernibility_metric']:,.0f}",
+                        help="Quality loss metric. Lower = better utility."
+                    )
+            
+            st.dataframe(result.dataframe.head(100), use_container_width=True)
+            st.download_button(
+                "Download anonymized CSV",
+                data=result.dataframe.to_csv(index=False).encode("utf-8"),
+                file_name="anonymized.csv",
+                mime="text/csv",
+            )
         else:
             # Display anonymization result
             st.success(f"Anonymization finished. Rows: {result.anonymized_rows}/{result.original_rows}")
