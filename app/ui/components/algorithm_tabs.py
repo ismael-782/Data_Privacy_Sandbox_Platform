@@ -89,7 +89,6 @@ def render_algorithm_tabs(df: pd.DataFrame) -> TabParams:
     # Auto-Suggest Tab
     with tabs[3]:
         st.markdown("**Auto-Suggest** analyzes your data and automatically applies the best anonymization technique.")
-        st.info("💡 The algorithm evaluates multiple techniques and selects the one with the highest utility.")
         params_dict["suggestion"] = {}
         if st.button("Run Auto-Suggest", key="btn_run_suggest", type="primary"):
             clicked = "suggestion"

@@ -49,6 +49,11 @@ class SuggestionAlgorithm(PrivacyAlgorithm):
         # The suggestion algorithm requires sensitive attributes for full analysis
         sens_attrs = params.sensitive_attributes or []
         
+        # Create a working copy and drop identifiers before processing
+        working_df = df.copy()
+        if params.identifiers:
+            working_df = working_df.drop(columns=params.identifiers, errors="ignore")
+        
         # Capture stdout to parse which algorithm was selected
         captured = io.StringIO()
         old_stdout = sys.stdout
@@ -57,10 +62,10 @@ class SuggestionAlgorithm(PrivacyAlgorithm):
         try:
             # Pass a copy because the library modifies data in-place when testing algorithms
             anonymized = anonymity.suggest_anonymity(
-                data=df.copy(),
+                data=working_df.copy(),
                 quasi_idents=params.quasi_identifiers,
                 sens=sens_attrs,
-                idents=params.identifiers or [],
+                idents=[],  # Don't pass identifiers to library, we already dropped them
             )
         finally:
             sys.stdout = old_stdout
