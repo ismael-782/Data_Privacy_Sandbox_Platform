@@ -19,25 +19,25 @@ A local sandbox for privacy-preserving data transformations. Upload a dataset, m
 
 The app opens with a prompt to upload a dataset or load the built-in example dataset. No processing happens until a file is provided.
 
-![Landing page empty state](screenshots/01-landing-empty-state.png)
+![Landing page empty state](01-landing-empty-state.png)
 
 ### 2. Dataset loaded — column profile & warnings
 
 Once a dataset is loaded, the app profiles every column (type, uniqueness, uniqueness ratio, missing values) and flags columns that look like identifiers, so the user knows what to exclude or mark before configuring privacy settings.
 
-![Dataset loaded with column warnings](screenshots/02-dataset-loaded-warnings.png)
+![Dataset loaded with column warnings](02-dataset-loaded-warnings.png)
 
 ### 3. Column roles & algorithm selection
 
 The user assigns each column a role, quasi-identifier, sensitive attribute, or identifier (identifiers are dropped before processing), and picks one or more privacy algorithms to apply. The app also raises role-level warnings, e.g. flagging a quasi-identifier that is too unique and should probably be reclassified.
 
-![Column roles and algorithm selection](screenshots/03-column-roles-algorithms.png)
+![Column roles and algorithm selection](03-column-roles-algorithms.png)
 
 ### 4. Anonymization results
 
 After processing, the app reports the suppression ratio and shows the anonymized dataset (quasi-identifiers generalized into ranges, sensitive/identifier columns handled per the configuration), with a button to download the anonymized CSV.
 
-![Anonymization results](screenshots/04-anonymization-results.png)
+![Anonymization results](04-anonymization-results.png)
 
 ---
 
